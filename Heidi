@@ -1,0 +1,183 @@
+!--
+Archivo: lluvia-de-amor.html
+Descripción: Página estática que genera una "lluvia de amor" (corazones cayendo) y muestra el texto "I love you so" cada vez que se presiona el botón o la pantalla.
+Cómo usar en GitHub Pages:
+1. Crea un repositorio en GitHub (por ejemplo: lluvia-de-amor).
+2. Añade este archivo con nombre index.html en la raíz del repo y haz commit.
+3. Ve a Settings -> Pages y selecciona la rama main/master y carpeta / (root). Guarda.
+4. Abre la URL de GitHub Pages (https://tu-usuario.github.io/tu-repo) y ¡listo!
+-->
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lluvia de Amor — I love you so</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#0b1220cc;
+      --accent:#ff6b9a;
+      --glass: rgba(255,255,255,0.06);
+      --text:#f8fafc;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg) 0%, #071028 100%);color:var(--text)}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;box-sizing:border-box}
+    .card{width:100%;max-width:820px;background:linear-gradient(180deg,var(--card), rgba(11,18,32,0.7));border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(2,6,23,0.6);position:relative;overflow:hidden}
+    h1{margin:0 0 12px 0;font-size:28px;letter-spacing:0.2px}
+    p{margin:0 0 18px 0;opacity:0.9}
+    .controls{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{background:linear-gradient(90deg,var(--accent),#ff4c7b);border:none;padding:12px 18px;border-radius:12px;color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(255,80,140,0.18);transition:transform .12s ease}
+    .btn:active{transform:translateY(1px) scale(.998)}
+    .small{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:var(--text)}
+
+    /* area where hearts fall */
+    .sky{position:absolute;inset:0;pointer-events:none}
+
+    /* heart base */
+    .heart{
+      position:absolute;top:-50px;font-size:22px;will-change:transform,opacity;pointer-events:none;user-select:none;z-index:8;text-shadow:0 2px 8px rgba(0,0,0,0.45)
+    }
+
+    /* fall animation */
+    @keyframes fall{
+      0%{transform:translateY(-20vh) rotate(0deg);opacity:1}
+      100%{transform:translateY(110vh) rotate(540deg);opacity:0}
+    }
+
+    /* floating praise text */
+    .words{position:absolute;left:50%;transform:translateX(-50%);top:18px;font-size:20px;background:linear-gradient(90deg,#ffffff, #ffd9e6);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700;z-index:10}
+
+    .toast{position:fixed;right:20px;bottom:20px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.04);backdrop-filter: blur(6px);color:var(--text)}
+
+    footer{margin-top:18px;font-size:13px;opacity:0.9}
+
+    /* small responsive */
+    @media (max-width:520px){h1{font-size:20px}.card{padding:18px}.heart{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <div class="words" id="words">Haz click y llueve amor</div>
+      <h1>Lluvia de Amor</h1>
+      <p>Presiona el botón o toca cualquier parte de la tarjeta para crear una pequeña lluvia de corazones. Cada vez que presiones se mostrará el texto "I love you so".</p>
+
+      <div class="controls">
+        <button class="btn" id="loveBtn">Lluvia de amor 💖</button>
+        <div class="small" id="counter">Presiones: 0</div>
+        <button class="btn" id="toggleText">Alternar texto</button>
+      </div>
+
+      <footer>Diseñado para GitHub Pages — guarda este archivo como <code>index.html</code>.</footer>
+
+      <div class="sky" id="sky"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" style="display:none">¡Hecho!</div>
+
+  <script>
+    const sky = document.getElementById('sky');
+    const btn = document.getElementById('loveBtn');
+    const counterEl = document.getElementById('counter');
+    const words = document.getElementById('words');
+    const toast = document.getElementById('toast');
+    const toggleTextBtn = document.getElementById('toggleText');
+
+    let count = 0;
+    let showWords = true;
+
+    // frases posibles
+    const PHRASES = ["I love you so", "I love you so much", "Te amo", "Te quiero mucho", "Amor eterno"];
+
+    function rand(min,max){return Math.random()*(max-min)+min}
+
+    function makeHeart(x){
+      const h = document.createElement('div');
+      h.className = 'heart';
+      // usar emoji corazón y a veces un pequeño texto
+      const emoji = ['❤️','💖','💕','💘'][Math.floor(Math.random()*4)];
+      h.innerText = emoji;
+      // posición aleatoria cerca de x
+      const left = Math.min(Math.max(5, x + rand(-80,80)), window.innerWidth - 40);
+      h.style.left = left + 'px';
+
+      // tamaño y duración aleatoria
+      const size = rand(16,44);
+      h.style.fontSize = size + 'px';
+
+      const duration = rand(3600,7000);
+      h.style.animation = `fall ${duration}ms linear forwards`;
+
+      // ligera oscilación horizontal con transform during animation
+      h.style.setProperty('--xshift', rand(-40,40) + 'px');
+
+      sky.appendChild(h);
+
+      // eliminar después de terminar
+      setTimeout(()=>{h.remove()}, duration + 80);
+    }
+
+    // crear varios corazones en ráfaga
+    function burst(x, n=12){
+      for(let i=0;i<n;i++){
+        setTimeout(()=>makeHeart(x), i*40 + Math.random()*120);
+      }
+    }
+
+    function showFloatingPhrase(){
+      if(!showWords) return;
+      const phrase = PHRASES[Math.floor(Math.random()*PHRASES.length)];
+      words.innerText = phrase;
+      words.style.opacity = '1';
+      words.style.transition = 'none';
+      // animación simple: subir y desaparecer
+      words.animate([
+        {transform: 'translate(-50%, 0)', opacity:1},
+        {transform: 'translate(-50%, -40px)', opacity:0}
+      ],{duration:1400,easing:'ease-out'});
+      // restaurar texto informativo después
+      setTimeout(()=>{words.innerText = 'Haz click y llueve amor'}, 1600);
+    }
+
+    function pressAt(x){
+      count++;
+      counterEl.innerText = 'Presiones: ' + count;
+      burst(x, 14);
+      showFloatingPhrase();
+      // mostrar toast breve
+      toast.style.display = 'block';
+      toast.innerText = 'I love you so ❤️';
+      setTimeout(()=>{toast.style.display='none'},900);
+    }
+
+    // eventos
+    btn.addEventListener('click', (e)=>{pressAt(e.clientX)});
+
+    // click en tarjeta
+    document.getElementById('card').addEventListener('click', (e)=>{
+      // evitar que el click del botón cuente dos veces
+      if(e.target === btn) return;
+      pressAt(e.clientX);
+    });
+
+    toggleTextBtn.addEventListener('click', ()=>{showWords = !showWords; toggleTextBtn.innerText = showWords? 'Alternar texto' : 'Mostrar texto: OFF';});
+
+    // accesibilidad: tecla espacio o enter en el botón
+    btn.addEventListener('keydown', (e)=>{if(e.key===' '||e.key==='Enter'){e.preventDefault(); pressAt(btn.getBoundingClientRect().left + 40)}});
+
+    // toque en móvil: tocar cualquier parte de la tarjeta
+    document.getElementById('card').addEventListener('touchstart', (e)=>{const x = e.touches[0].clientX; pressAt(x)});
+
+    // limpieza periódica por si hay muchos elementos
+    setInterval(()=>{
+      const hearts = sky.querySelectorAll('.heart');
+      if(hearts.length>120){
+        hearts.forEach((h,i)=>{if(i%2===0) h.remove()});
+      }
+    }, 4000);
+  </script>
+</body>
+</html>
